@@ -79,6 +79,27 @@ def requirement3(N):
             finalClause.append("("+ "V".join(temp2) + ")")
     return "Λ".join(finalClause)
 
+# isPow2 = lambda n: ((n&(n-1)==0) and n) and (True) or (False)
+# if not isPow2(len(valueVector)):
+#         raise Exception("bad valueVector length")
+def requirement4(n, N=0):
+    finalClause = []
+    for t in range(2**n):
+        binNum =  "{}".format(bin(num))[2:]
+        binNum = (("0" * (n - len(binNum))) + binNum)
+        for i, item in enumerate(binNum):
+            variables.append("v_{}_{}".format(i, t))
+            negation = "-" if item == "0" else ""
+            finalClause.append(negation + "v_{}_{}".format(i, t))
+    return "Λ".join(finalClause)
+
+
+def requirement5():
+    ""
+
+def requirement6():
+    ""
+
 
 
 exit()
@@ -96,7 +117,7 @@ exit()
 
 
 
-isPow2 = lambda n: ((n&(n-1)==0) and n) and (True) or (False)
+
 
 vectorOfValue = "1110001011100010"
 numOfVars = len("{}".format(bin(len(vectorOfValue)-1)))-2
