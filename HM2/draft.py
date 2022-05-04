@@ -85,7 +85,7 @@ def requirement3(N):
 def requirement4(n, N=0):
     finalClause = []
     for t in range(2**n):
-        binNum =  "{}".format(bin(num))[2:]
+        binNum =  "{}".format(bin(t))[2:]
         binNum = (("0" * (n - len(binNum))) + binNum)
         for i, item in enumerate(binNum):
             variables.append("v_{}_{}".format(i, t))
@@ -121,12 +121,21 @@ def requirement5(n, N=0):
     return "Λ".join(finalClause)                       
 
 
-def requirement6():
-    ""
+def requirement6(vectorValue, n, N):
+    finalClause = []
+    for k in range(1):
+        for r in range(0, 2**n):
+            for i in range(n, n + N):
+                if vectorValue[r] == "1":
+                    v = "v_{}_{}".format(i, r)
+                    o = "-o_{}_{}".format(i, k)
+                    finalClause.append("{}V{}".format(v, o))
+                else:
+                    v = "-v_{}_{}".format(i, r)
+                    o = "-o_{}_{}".format(i, k)
+                    finalClause.append("{}V{}".format(v, o))
+    return "Λ".join(finalClause)    
 
-
-
-exit()
 
 
 
