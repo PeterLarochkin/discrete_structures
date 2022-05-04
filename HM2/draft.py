@@ -94,8 +94,32 @@ def requirement4(n, N=0):
     return "Λ".join(finalClause)
 
 
-def requirement5():
+def requirement5(n, N=0):
     ""
+    finalClause = []
+    for i in range(n, n + N):
+        for j0 in range(n, i):
+            for j1 in range(j0, i):
+                for i0 in range(0, 2):
+                    for i1 in range(0, 2):
+                        for r in range(0, 2**n):
+                            localClause = []
+                            localClause.append("-c_{}_{}_{}".format(i, 0, j0))
+                            localClause.append("-c_{}_{}_{}".format(i, 1, j1))
+                            if i0 == 1:
+                                localClause.append("-v_{}_{}".format(j0,r))
+                            else:
+                                localClause.append("v_{}_{}".format(j0,r))
+                            if i1 == 1:
+                                localClause.append("-v_{}_{}".format(j1,r))
+                            else:
+                                localClause.append("v_{}_{}".format(j1,r))
+                            v = "v_{}_{}".format(i, r)
+                            t = "t_{}_{}_{}".format(i, i0, i1)
+                            finalClause.append("V".join(localClause)+"V-{}V{}".format(v, t))
+                            finalClause.append("V".join(localClause)+"V{}-V{}".format(v, t))
+    return "Λ".join(finalClause)                       
+
 
 def requirement6():
     ""
