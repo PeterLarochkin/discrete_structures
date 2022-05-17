@@ -232,7 +232,7 @@ def requirement6(vectorValue, n, N):
 
 
 
-vectorOfValue = "0000111100001111"
+vectorOfValue = "0010000100100001"
 # print()
 quantityOfElement = 2
 # print("{}".format(bin(len(vectorOfValue)-1)))
@@ -245,11 +245,125 @@ fclause = [
     requirement3_(quantityOfElement, numOfVars), 
     requirement4_(quantityOfElement, numOfVars), 
     requirement5(quantityOfElement, numOfVars), 
-    requirement6_(vectorOfValue, numOfVars, quantityOfElement)
+    requirement6(vectorOfValue, numOfVars, quantityOfElement)
     ]
 
 
 string_clause = "Λ".join(fclause)
+final = string_clause
+fclause = [ [element for element in dis.split("V")] for dis in string_clause.split("Λ")]
+# print(fclause)
+variables = set()
+for dis in fclause:
+    for element in dis:
+        if element[0]=="-":
+            variables.add(element[1:])
+        else:
+            variables.add(element)
+
+variables = (list(variables))
+map_index_to_item = {}
+map_item_to_index = {}
+
+for i, var in enumerate(variables):
+    map_index_to_item[i+1] = var
+    map_item_to_index[var] = i + 1
+    final = final.replace(var, str(map_item_to_index[var]))
+
+
+lens = len(string_clause.split("Λ"))
+for_minisat = f"p cnf {len(map_index_to_item)} {lens} \n"
+for dis in string_clause.split("Λ"):
+    if "V" in dis:
+        for elem in dis.split("V"):
+            sign = (-1 if elem[0]=="-" else 1)
+            for_minisat += str(sign * map_item_to_index[elem[1:] if elem[0]=="-" else elem]) + " "
+    else:
+        for_minisat += str((-1 if dis[0]=="-" else 1) * map_item_to_index[dis[1:] if dis[0]=="-" else dis]) + " "
+    for_minisat+="0\n"
+# print(for_minisat)
+file_str = for_minisat
+file = open("for_minisat", 'w')
+file.write(file_str)
+file.close()
+minisat_solution = {}
+def from_minisat(output_minisat):
+    output_minisat = output_minisat.split(" ")[:-1]
+    print(output_minisat)
+    for item in output_minisat:
+        if item[0] == "-":
+            minisat_solution[map_index_to_item[int(item[1:])]] = False
+        else:
+            minisat_solution[map_index_to_item[int(item)]] = True
+os.system("minisat for_minisat output")
+file = open("output", 'r')
+
+
+output_minisat= file.read().split("\n")[1]
+file.close()
+from_minisat(output_minisat)
+# print(minisat_solution)
+body_string = "\n"
+print(minisat_solution)
+for key in minisat_solution.keys():
+    if minisat_solution[key]:
+        if key[0] == "c":
+            c = key
+            print(c)
+            c = c[2:-1]
+            c = c.split("_")
+            from_ = ("x"+c[2]) if int(c[2]) < numOfVars else ("element"+c[2])
+            to_ = ("x"+c[0]) if int(c[0]) < numOfVars else ("element"+c[0])
+            body_string = body_string + """ "{}" -> "{}";\n""".format(from_, to_)
+
+
+        if key[0] == "o":
+            o = key
+            print(o)
+            o = o[2:-1]
+            o = o.split("_")
+            o[0] = ("x"+o[0]) if int(o[0])< numOfVars else ("element"+o[0])
+            body_string = body_string + """ "{}" -> "{}";\n""".format(o[0], "end")
+
+
+os.system("rm scheme.dot")
+os.system("rm scheme.dot.png")
+# exit()
+file_name = "scheme.dot"
+file_str = """digraph G {\n""" + body_string + """\n}"""
+file = open(file_name, 'w')
+file.write(file_str)
+file.close()
+os.system("dot -T png -O " + file_name)
+exit()
+
+S = minisolvers.MinisatSolver()
+for i in range(len(map_index_to_item)):
+    S.new_var()  
+
+for dis in final.split("Λ"):
+    clause = [ int(elem) for elem in dis.split("V")]
+    S.add_clause(clause)  
+print(S.solve())
+solution = (list(S.get_model()))
+print(solution)
+exit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 variables = []
 for dis in string_clause.split("Λ"):
     for elem in dis.split("V"):
