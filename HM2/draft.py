@@ -1,14 +1,7 @@
 from typing import final
 from PyMiniSolvers import minisolvers
-# S = minisolvers.MinisatSolver()
-# for i in range(4):
-#     S.new_var()  
-# for clause in [1], [-2], [-1, 2, -3], [3, 4]:
-#     S.add_clause(clause)  
-# S.solve()
-# получим решение
-# print(list(S.get_model()))
-
+import os
+from itertools import product
 
 variables = []
 # https://logic.pdmi.ras.ru/~arist/papers/sat09.pdf
@@ -16,35 +9,81 @@ variables = []
 
 # N - quantity of element
 # n - input variables
-n = 0
-def requirement1(N):
-    temp = []
+# n = 0
+
+
+
+def stupid_match(bin):
+    if bin == 0:
+        return "0_0_"
+    if bin == 1:
+        return "0_1_"
+    if bin == 2:
+        return "1_0_"
+    if bin == 3:
+        return "1_1_"
+
+def support(binum:str):
+    for i in range(len(binum)//4):
+        if binum[i:i + 4] != "1110":
+            return False
+    return True
+def requirement1_(N: int, n: int):
+    final_clause = []
+    for num in range(2**(4*N)):
+        binNum =  "{}".format(bin(num))[2:]
+        binNum = (("0"*((4*N) - len(binNum)))+binNum)
+        if support(binNum):
+            localClause = []
+            for i, item in enumerate(binNum):
+                sign = "-" if item else ""
+                localClause.append(f"{sign}t_{n + i // 4}_{stupid_match(i % 4)}")
+            
+            final_clause.append("V".join(localClause))
+    return("Λ".join(final_clause))  
+
+
+
+
+
+def requirement1(N, n=0):
+    temp2 = []
     for i in range(n, n + N):
-        variables.append("t_{}_0_0".format(i))
-        variables.append("t_{}_0_1".format(i))
-        variables.append("t_{}_1_0".format(i))
-        variables.append("t_{}_1_1".format(i))
+        # variables.append("t_{}_0_0_".format(i))
+        # variables.append("t_{}_0_1_".format(i))
+        # variables.append("t_{}_1_0_".format(i))
+        # variables.append("t_{}_1_1_".format(i))
+        temp = []
+        temp2.append(f"t_{i}_0_0_")
+        temp2.append(f"t_{i}_0_1_")
+        temp2.append(f"t_{i}_1_0_")
+        temp2.append(f"-t_{i}_1_1_")
+        # temp2.append("V".join(temp))
+    return "Λ".join(temp2)
 
-        temp.append("t_{}_0_0".format(i))
-        temp.append("t_{}_0_1".format(i))
-        temp.append("t_{}_1_0".format(i))
-        temp.append("-t_{}_1_1".format(i))
-    return "Λ".join(temp)
 
-def requirement2(N):
-    temp = []
+
+# def requirement2_(N, n=0):
+#     temp = []
+#     finalClause = []
+    
+def requirement2_(num_gates_N: int, num_gates_n: int):
+    disjunctions_list = []
+    i_range = range(num_gates_n, num_gates_n + num_gates_N)
+    k_range = range(2)
+    j_range = range(num_gates_N + num_gates_n)
+    for (i, k) in product(i_range, k_range):
+        existence_cond_variables = [f"c_{i}_{k}_{j}_" for j in range(i)]  # range(i)))
+        disjunctions_list.append(existence_cond_variables)
+        for j_1 in j_range:
+            for j_2 in range(j_1 + 1, num_gates_N + num_gates_n):
+                if j_1 < j_2:
+                    disjunction_clause = [f"-c_{i}_{k}_{j_1}_", f"-c_{i}_{k}_{j_2}_"]
+                    disjunctions_list.append(disjunction_clause)
+    return "Λ".join(([ "V".join(dis) for dis in disjunctions_list]))
+
+def requirement2(N, n=0):
     finalClause = []
-    vars = []
-    for i in range(n, n + N):
-        for j in range(0, n + N):
-            variables.append("c_{}_0_{}".format(i, j))
-            variables.append("c_{}_1_{}".format(i, j))
-
-            vars.append("c_{}_0_{}".format(i, j))
-            vars.append("c_{}_1_{}".format(i, j))
-
-            temp.append("{}_0_{}'c_{}_0_{}".format(i, j, i, j))
-            temp.append("{}_1_{}'c_{}_1_{}".format(i, j, i, j))
     for i in range(n, n + N):
         for k in range(0, 2):
             # localVars = list(filter(lambda var: var[:3] == "{}_{}".format(i, k), temp))
@@ -57,16 +96,27 @@ def requirement2(N):
                     temp2 = []
                     for j, item in enumerate(binNum):
                         replaced = "-" if item == "1" else ""
-                        clause = replaced+"c_{}_{}_{}".format(i, k, j)
+                        clause = replaced+"c_{}_{}_{}_".format(i, k, j)
                         temp2.append(clause)
-                    finalClause.append("("+ "V".join(temp2) + ")")
-    print(vars)
+                    
+                    finalClause.append("V".join(temp2))
+    # print(vars)
     return "Λ".join(finalClause)
 
-def requirement3(N):
+
+# def requirement2__(N, n):
+#     finalClause = []
+#     for i in range(n, n + N):
+#         for k in range(0, 2):
+
+
+
+
+
+def requirement3(N, n=0):
     finalClause = []
-    for i in range(n, n + N):
-        variables.append("o_{}_{}".format(i, 0))
+    # for i in range(n, n + N):
+    #     variables.append("o_{}_{}_".format(i, 0))
     for num in range(2**(n+N)):
         binNum =  "{}".format(bin(num))[2:]
         binNum = (("0"*((n+N) - len(binNum)))+binNum)
@@ -74,51 +124,95 @@ def requirement3(N):
             temp2 = []
             for i, item in enumerate(binNum):
                 replaced = "-" if item == "1" else ""
-                clause = replaced+"o_{}_{}".format(i, 0)
+                # variables.append("o_{}_{}_".format(i, 0))
+                clause = replaced+"o_{}_{}_".format(i, 0)
                 temp2.append(clause)
-            finalClause.append("("+ "V".join(temp2) + ")")
+            finalClause.append(""+ "V".join(temp2) + "")
     return "Λ".join(finalClause)
+
+
+def requirement3_(num_gates_N: int, num_gates_n: int,  output_size_m: int = 1):
+    disjunctions_list = []
+    i_range = range(num_gates_n, num_gates_n + num_gates_N)
+    j_range = range(output_size_m)
+    for j in j_range:
+        existence_cond = [f"o_{i}_{j}_" for i in i_range]
+        disjunctions_list.append(existence_cond)
+        for i_1 in i_range:
+            for i_2 in range(i_1 + 1, num_gates_n + num_gates_N):
+                if i_1 < i_2:
+                    disjunction_clause = [f"-o_{i_1}_{j}_", f"-o_{i_2}_{j}_"]
+                    disjunctions_list.append(disjunction_clause)
+    for dis in disjunctions_list:
+        for var in dis:
+            if var[0] == "-":
+                variables.append(var[1:])
+            else:
+                variables.append(var)
+    return "Λ".join(["V".join(dis) for dis in disjunctions_list])
 
 # isPow2 = lambda n: ((n&(n-1)==0) and n) and (True) or (False)
 # if not isPow2(len(valueVector)):
 #         raise Exception("bad valueVector length")
-def requirement4(n, N=0):
+
+
+
+def requirement4_(N, num_gates_n: int):
+    disjunctions_list = []
+    input_sets = list(product((0, 1), repeat=num_gates_n))
+    i_range = range(num_gates_n)
+    t_range = range(2 ** num_gates_n)
+    assert len(input_sets) == 2 ** num_gates_n
+    for (i, t) in product(i_range, t_range):
+        input_value = input_sets[t][i]
+        sign = '' if input_value == 1 else '-'
+        clause = (f"{sign}v_{i}_{t}_")
+        disjunctions_list.append(clause)
+    return "Λ".join(disjunctions_list)
+
+
+def requirement4(N, n=0):
     finalClause = []
     for t in range(2**n):
         binNum =  "{}".format(bin(t))[2:]
         binNum = (("0" * (n - len(binNum))) + binNum)
         for i, item in enumerate(binNum):
-            variables.append("v_{}_{}".format(i, t))
+            variables.append("v_{}_{}_".format(i, t))
             negation = "-" if item == "0" else ""
-            finalClause.append(negation + "v_{}_{}".format(i, t))
+            finalClause.append(negation + "v_{}_{}_".format(i, t))
     return "Λ".join(finalClause)
 
 
-def requirement5(n, N=0):
+def requirement5(N, n=0):
     ""
     finalClause = []
-    for i in range(n, n + N):
-        for j0 in range(n, i):
+    i_range = range(n, N + n)
+    t_range = range(2 ** n)
+    bit_range = range(2)
+    for (i, r, i0, i1) in product(i_range, t_range, bit_range, bit_range):
+        for j0 in range(0, i):
             for j1 in range(j0, i):
-                for i0 in range(0, 2):
-                    for i1 in range(0, 2):
-                        for r in range(0, 2**n):
-                            localClause = []
-                            localClause.append("-c_{}_{}_{}".format(i, 0, j0))
-                            localClause.append("-c_{}_{}_{}".format(i, 1, j1))
-                            if i0 == 1:
-                                localClause.append("-v_{}_{}".format(j0,r))
-                            else:
-                                localClause.append("v_{}_{}".format(j0,r))
-                            if i1 == 1:
-                                localClause.append("-v_{}_{}".format(j1,r))
-                            else:
-                                localClause.append("v_{}_{}".format(j1,r))
-                            v = "v_{}_{}".format(i, r)
-                            t = "t_{}_{}_{}".format(i, i0, i1)
-                            finalClause.append("V".join(localClause)+"V-{}V{}".format(v, t))
-                            finalClause.append("V".join(localClause)+"V{}-V{}".format(v, t))
+                i_0_sign = '-' if i0 == 1 else ''
+                i_1_sign = '-' if i1 == 1 else ''
+                clause_1 = f"-c_{i}_{0}_{j0}_V-c_{i}_{1}_{j1}_V{i_0_sign}v_{j0}_{r}_V{i_1_sign}v_{j1}_{r}_Vv_{i}_{r}_V-t_{i}_{i0}_{i1}_"
+                clause_2 = f"-c_{i}_{0}_{j0}_V-c_{i}_{1}_{j1}_V{i_0_sign}v_{j0}_{r}_V{i_1_sign}v_{j1}_{r}_V-v_{i}_{r}_Vt_{i}_{i0}_{i1}_"
+                finalClause.append(clause_1)
+                finalClause.append(clause_2)
     return "Λ".join(finalClause)                       
+
+def requirement6_(values, num_gates_n: int, num_gates_N: int, output_size_m: int = 1):
+    disjunctions_list = []
+    values = [(int(i),) for i in values]
+    i_range = range(num_gates_n, num_gates_N + num_gates_n)
+    r_range = range(2 ** num_gates_n)
+    k_range = range(output_size_m)
+    for (i, r, k) in product(i_range, r_range, k_range):
+        value = values[r][k]
+        sign = '' if value == 1 else '-'
+        clause = [f"-o_{i}_{k}_", f"{sign}v_{i}_{r}_"]
+        disjunctions_list.append(clause)
+    return "Λ".join(["V".join(dis) for dis in disjunctions_list])
+
 
 
 def requirement6(vectorValue, n, N):
@@ -127,88 +221,100 @@ def requirement6(vectorValue, n, N):
         for r in range(0, 2**n):
             for i in range(n, n + N):
                 if vectorValue[r] == "1":
-                    v = "v_{}_{}".format(i, r)
-                    o = "-o_{}_{}".format(i, k)
+                    v = "v_{}_{}_".format(i, r)
+                    o = "-o_{}_{}_".format(i, k)
                     finalClause.append("{}V{}".format(v, o))
                 else:
-                    v = "-v_{}_{}".format(i, r)
-                    o = "-o_{}_{}".format(i, k)
+                    v = "-v_{}_{}_".format(i, r)
+                    o = "-o_{}_{}_".format(i, k)
                     finalClause.append("{}V{}".format(v, o))
     return "Λ".join(finalClause)    
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-vectorOfValue = "1110001011100010"
+vectorOfValue = "0000111100001111"
+# print()
+quantityOfElement = 2
+# print("{}".format(bin(len(vectorOfValue)-1)))
 numOfVars = len("{}".format(bin(len(vectorOfValue)-1)))-2
-print(numOfVars)
-ans = 0
-nums = []
-edges = []
-if not isPow2(len(vectorOfValue)):
-    raise Exception("bad length")
 
-for num in range(len(vectorOfValue)):
-    if not int(vectorOfValue[num]):
-        binNum = "{}".format(bin(num))[2:]
-        nums.append(num)
-        print(("0"*(numOfVars - len(binNum)))+binNum, vectorOfValue[num])
-        ans = ans | num
-brackets = []
-for inum, num in enumerate(nums):
-    binNum = "{}".format(bin(num))[2:]
-    varInBrackets = []
-    for i, item in enumerate((("0"*(numOfVars - len(binNum)))+binNum)):
-        if item == "0":
-            varInBrackets.append(" x{} ".format(i))
+# print(numOfVars)
+fclause = [
+    requirement1(quantityOfElement, numOfVars), 
+    requirement2_(quantityOfElement, numOfVars), 
+    requirement3_(quantityOfElement, numOfVars), 
+    requirement4_(quantityOfElement, numOfVars), 
+    requirement5(quantityOfElement, numOfVars), 
+    requirement6_(vectorOfValue, numOfVars, quantityOfElement)
+    ]
+
+
+string_clause = "Λ".join(fclause)
+variables = []
+for dis in string_clause.split("Λ"):
+    for elem in dis.split("V"):
+        if elem[0] == "-":
+            variables.append(elem[1:])
         else:
-            varInBrackets.append(" -x{} ".format(i))
-    for i in range(len(varInBrackets)):
-        if i <=1:
-            edges.append(((varInBrackets[i]), "V{}/0".format(inum)))
-        else:
-            edges.append(("V{}/{}".format(inum,i-2),"V{}/{}".format(inum,i-1)))
-            edges.append((varInBrackets[i],"V{}/{}".format(inum,i-1)))
-    if inum <=1:
-        edges.append(("V{}/{}".format(inum,((len(varInBrackets))-2)), "Λ0".format(inum)))
-    elif inum < len(nums):
-        edges.append(("Λ{}".format(inum-2),"Λ{}".format(inum-1)))
-        edges.append(("V{}/{}".format(inum,((len(varInBrackets))-2)),"Λ{}".format(inum-1)))
-    
-    brackets.append("("+"V".join(varInBrackets)+")")
+            variables.append(elem)
 
-# print("Λ".join(brackets))  
-for i in range((numOfVars)):
-    edges.append((" x{} ".format(i)," -x{} ".format(i))) 
-print(edges)
+variables = list(dict.fromkeys(variables))[::-1]
+
+map_index_to_item = {}
+map_item_to_index = {}
+
+for i, item in enumerate(variables):
+    # string_clause = string_clause.replace(item, str(i+1))
+    map_item_to_index[item] = i+1
+    map_index_to_item[i] = item
+
+# print(var_map)
+# clauses = [ [ (1 if item[0]!="-" else -1) * map_item_to_index[item if item[0]!="-" else item[1:] ]  for item in dis.split("V")] for dis in string_clause.split("Λ") ]
+# clauses = [ [int(item) for item in dis.split("V")] for dis in string_clause.split("Λ")]
+S = minisolvers.MinisatSolver()
+neededIndices = []
+
+for i in range(len(map_index_to_item)):
+    S.new_var()  
+for dis in  string_clause.split("Λ"):
+    clause = dis.split("V")
+    clause = [(-1 if item[0]=="-" else 1) * map_item_to_index[item if item[0] != "-" else item[1:]] for item in clause]
+# for clause in clauses:
+#     print(clause)
+    S.add_clause(clause)  
+print(S.solve())
+# решение
+solution = (list(S.get_model()))
+body_string = "\n"
+
+for i, item in enumerate(solution):
+    if item and (i in map_index_to_item.keys()):
+        
+        var = map_index_to_item[i]
+        # print(var)
+        if var[0] == "c":
+            c = var
+            print(c)
+            c = c[2:-1]
+            c = c.split("_")
+            from_ = ("x"+c[2]) if int(c[2]) < numOfVars else ("element"+c[2])
+            to_ = ("x"+c[0]) if int(c[0]) < numOfVars else ("element"+c[0])
+            body_string = body_string + """ "{}" -> "{}";\n""".format(from_, to_)
 
 
-# libraries
-import pandas as pd
-import numpy as np
-import networkx as nx
-import matplotlib.pyplot as plt
- 
-# Build a dataframe with your connections
-df = pd.DataFrame({ 'from':[a for a,_ in edges], 'to':[a for _,a in edges]})
- 
-# Build your graph
-G=nx.from_pandas_edgelist(df, 'from', 'to')
- 
-# Graph with Custom nodes:
-nx.draw(G, with_labels=True, node_size=1500, node_color="skyblue", node_shape="s", alpha=0.5, linewidths=40)
-plt.show()
-    
+        if var[0] == "o":
+            o = var
+            print(o)
+            o = o[2:-1]
+            o = o.split("_")
+            o[0] = ("x"+o[0]) if int(o[0])< numOfVars else ("element"+o[0])
+            body_string = body_string + """ "{}" -> "{}";\n""".format(o[0], "end")
+
+
+file_name = "scheme.dot"
+file_str = """digraph G {\n""" + body_string + """\n}"""
+file = open(file_name, 'w')
+file.write(file_str)
+file.close()
+os.system("dot -T png -O " + file_name)
+exit()
