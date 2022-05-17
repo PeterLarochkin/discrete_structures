@@ -1,17 +1,42 @@
 import random
 from time import sleep
+from mpi4py import MPI
+import os
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
+# паралельно
+# mpiexec -n 2 python draft.py
+# обычно просто кнопка
+
+# print(rank)
+
+# print('My rank is ',rank)
+
 
 graph_string = open("graph.txt", "r").read()
 graph = [ [int(i) for i in s.split(" ")] for s in graph_string.split("\n")]
-
+τ = [ [float(1) for i in s ] for s in graph]
 η = [ [1 / i for i in s ] for s in graph]
-τ = [ [ 1 for i in s ] for s in graph]
 α = 1
-β = 0.9
-p = 0.05
-Q = 10
-def print_tau(tau)->str:
+β = 1
+p = 0.1
+Q = 100
+
+def print_tau(τ)->str:
     return "\n".join([ " ".join([ f"{item:.{2}f}" for item in st]) for st in τ])
+# file = open('tau.txt', 'w')
+# file.write(print_tau([ [1 for i in s ] for s in graph]))
+# file.close()
+
+def sum_and_half_it(a, b):
+    ans = τ = [ [float(0) for i in s ] for s in graph]
+    for i, item in enumerate(a):
+        for j, jtem in enumerate(item):
+            ans[i][j] = (a[i][j]+b[i][j])/2
+    return ans
+
 def play_the_probability(list_of_prob):
     value = random.random()
     current_value = 0
@@ -20,7 +45,7 @@ def play_the_probability(list_of_prob):
         if value < current_value:
             return num
 
-def sworm(graph) -> list[int]:
+def sworm(graph, τ) -> list[int]:
     antitabu = list(range(len(graph)))
     initial_node = random.choice(antitabu)
     current_node = initial_node
@@ -47,7 +72,11 @@ def sworm(graph) -> list[int]:
 
 while True:
     try:
-        path = sworm(graph)
+        # f = open("tau.txt", "r")
+        # tau_string = f.read()
+        # τ = [ [float(i) for i in s.split(" ")] for s in graph_string.split("\n")]
+        # f.close()
+        path = sworm(graph, τ)
         # print(path)
         # print(int(len(path), len(graph))
         # if len(path) + 1 == len(graph) :
@@ -70,13 +99,36 @@ while True:
                     else:
                         τ[i][j] = (1-p)*τ[i][j]
         # print("**"*6)
-            import os
+            if size == 2:
+                if rank == 0:
+                    data = τ
+
+                    comm.send(data, dest=1, tag=11)
+                    data = comm.recv(source=1, tag=11)
+                    τ = sum_and_half_it(data, τ)
+                elif rank == 1:
+                    data = τ
+                    comm.send(data, dest=0, tag=11)
+                    data = comm.recv(source=0, tag=11)
+                    τ = sum_and_half_it(data, τ)
+
 
             os.system('clear')
-            print(f"Цена цикла равна равен: {L}")
-            print(print_tau(τ))
-            print("**"*6)
-            sleep(0.06)
+            
+            
+            file = open('tau.txt', 'w')
+            file.write(print_tau(τ))
+            file.close()
+            if rank == 0:
+                print(f"Цена цикла равна: {L}")
+                print(print_tau(τ))
+                print("**"*6)
+                sleep(1)
+            else:
+                print(f"Цена цикла равна: {L}")
+                print(print_tau(τ))
+                print("**"*6)
+                sleep(1)
     except KeyboardInterrupt:
         break
     
