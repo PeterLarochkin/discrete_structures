@@ -3,11 +3,10 @@ from PyMiniSolvers import minisolvers
 import os
 
 def create_t_ib1b2_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
-    # i_range = range(num_gates_n, num_gates_N + num_gates_n)
     i_range = range(num_gates_n, num_gates_N + num_gates_n)
     for i in i_range:
-        clauses = ((f"t_{i}_0_0_" ), (f"t_{i}_0_1_" ),
-                   (f"t_{i}_1_0_" ), (f"t_{i}_1_1_" ))
+        clauses = [(f"t_{i}_0_0_" ), (f"t_{i}_0_1_" ),
+                   (f"t_{i}_1_0_" ), (f"-t_{i}_1_1_" )]
         disjunctions_list.extend(clauses)
 
 
@@ -23,6 +22,22 @@ def create_c_ikj_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
                 if j_1 < j_2:
                     disjunction_clause = [f"-c_{i}_{k}_{j_1}_", f"-c_{i}_{k}_{j_2}_"]
                     disjunctions_list.append(disjunction_clause)
+            
+def requirement2_(N, n, finalClause):
+    # finalClause = []
+    for i in range(n, n + N):
+        for k in range(0, 2):
+            for num in range(2**(n+N)):
+                binNum =  "{}".format(bin(num))[2:]
+                binNum = (("0"*((n+N) - len(binNum)))+binNum)
+                if binNum.count("1") != 1:
+                    localClause = []
+                    for j, jtem in enumerate(binNum):
+                        # if i != j:
+                            sign = "" if jtem == "0" else "-"
+                            localClause.append(f"{sign}c_{i}_{k}_{j}_")
+                            finalClause.append((localClause))
+    # return (finalClause)
 
 
 def create_o_ij_clauses(num_gates_n: int, num_gates_N: int, output_size_m: int, disjunctions_list):
@@ -54,10 +69,7 @@ def create_six_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
     t_range = range(2 ** num_gates_n)
     bit_range = range(2)
     for (i, r, i_0, i_1) in product(i_range, t_range, bit_range, bit_range):
-        # print('aa', num_gates_n, i)
-        # for j_0 in range(num_gates_n, i + 1):
         for j_0 in range(0, i):
-            # print('j_0', j_0, num_gates_n, i)
             for j_1 in range(j_0, i):
                 i_0_sign = '-' if i_0 == 1 else ''
                 i_1_sign = '-' if i_1 == 1 else ''
@@ -76,35 +88,25 @@ def create_output_check_clauses(num_gates_n: int, num_gates_N: int, output_size_
     k_range = range(output_size_m)
     for (i, r, k) in product(i_range, r_range, k_range):
         value = values[r][k]
-        sign = '' if value == 1 else '-'
+        sign = '' if value == 0 else '-'
         clause = [f"-o_{i}_{k}_", f"{sign}v_{i}_{r}_"]
         disjunctions_list.append(clause)
 
 
-
-
-# fclause = [
-#     requirement1(quantityOfElement, numOfVars), 
-#     requirement2_(quantityOfElement, numOfVars), 
-#     requirement3_(quantityOfElement, numOfVars), 
-#     requirement4_(quantityOfElement, numOfVars), 
-#     requirement5(quantityOfElement, numOfVars), 
-#     requirement6_(vectorOfValue, numOfVars, quantityOfElement)
-#     ]
-
-
-vectorOfValue = "00000001"
+vectorOfValue = "0101"
 quantityOfElement = 2
 
 
+import math
+numOfVars = int(math.log2(len(vectorOfValue)))
 
-numOfVars = len("{}".format(bin(len(vectorOfValue)-1)))-2
 print(numOfVars)
 dis_list = []
 create_t_ib1b2_clauses(quantityOfElement, numOfVars, dis_list)
 string_clause = ""
 string_clause += "Λ".join(dis_list)
 dis_list = []
+# requirement2_(numOfVars, quantityOfElement, dis_list)
 create_c_ikj_clauses(numOfVars, quantityOfElement, dis_list)
 string_clause +=  "Λ" + "Λ".join([ "V".join(dis) for dis in dis_list])
 dis_list = []
@@ -122,7 +124,8 @@ values = [(int(value),) for value in vectorOfValue]
 create_output_check_clauses(numOfVars, quantityOfElement, 1,values,dis_list)
 
 
-string_clause +=  "Λ" +  "Λ".join([ "V".join(dis) for dis in dis_list])
+string_clause +=  "Λ" +  "Λ".join([ "V".join(dis) for dis in dis_list])  
+string_clause += f"Λo_{numOfVars + quantityOfElement - 1}_0_"
 final = string_clause
 fclause = [ [element for element in dis.split("V")] for dis in string_clause.split("Λ")]
 # print(fclause)
@@ -199,8 +202,8 @@ for key in minisat_solution.keys():
             body_string = body_string + """ "{}" -> "{}";\n""".format(o[0], "end")
 
 
-os.system("rm scheme.dot")
-os.system("rm scheme.dot.png")
+# os.system("rm scheme.dot")
+# os.system("rm scheme.dot.png")
 
 file_name = "scheme.dot"
 file_str = """digraph G {\n""" + body_string + """\n}"""

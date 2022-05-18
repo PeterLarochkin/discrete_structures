@@ -104,15 +104,24 @@ def requirement2(N, n=0):
     return "Λ".join(finalClause)
 
 
-# def requirement2__(N, n):
-#     finalClause = []
-#     for i in range(n, n + N):
-#         for k in range(0, 2):
+def requirement2__(N, n):
+    finalClause = []
+    for i in range(n, n + N):
+        for k in range(0, 2):
+            for num in range(2**(n+N)):
+                binNum =  "{}".format(bin(num))[2:]
+                binNum = (("0"*((n+N) - len(binNum)))+binNum)
+                if binNum.count("1") != 1:
+                    localClause = []
+                    for j, jtem in enumerate(binNum):
+                        sign = "" if jtem == "0" else "-"
+                        localClause.append(f"{sign}c_{i}_{k}_{j}_")
+                    finalClause.append("V".join(localClause))
+    return "Λ".join(finalClause)
 
 
-
-
-
+# print(requirement2__(2, 2))
+# exit()
 def requirement3(N, n=0):
     finalClause = []
     # for i in range(n, n + N):
@@ -151,9 +160,8 @@ def requirement3_(num_gates_N: int, num_gates_n: int,  output_size_m: int = 1):
                 variables.append(var)
     return "Λ".join(["V".join(dis) for dis in disjunctions_list])
 
-# isPow2 = lambda n: ((n&(n-1)==0) and n) and (True) or (False)
-# if not isPow2(len(valueVector)):
-#         raise Exception("bad valueVector length")
+
+
 
 
 
@@ -177,7 +185,7 @@ def requirement4(N, n=0):
         binNum =  "{}".format(bin(t))[2:]
         binNum = (("0" * (n - len(binNum))) + binNum)
         for i, item in enumerate(binNum):
-            variables.append("v_{}_{}_".format(i, t))
+            # variables.append("v_{}_{}_".format(i, t))
             negation = "-" if item == "0" else ""
             finalClause.append(negation + "v_{}_{}_".format(i, t))
     return "Λ".join(finalClause)
@@ -232,24 +240,27 @@ def requirement6(vectorValue, n, N):
 
 
 
-vectorOfValue = "0010000100100001"
+vectorOfValue = "10011001"
 # print()
 quantityOfElement = 2
 # print("{}".format(bin(len(vectorOfValue)-1)))
 numOfVars = len("{}".format(bin(len(vectorOfValue)-1)))-2
 
-# print(numOfVars)
+isPow2 = lambda n: ((n&(n-1)==0) and n) and (True) or (False)
+if not isPow2(len(vectorOfValue)):
+        raise Exception("bad valueVector length")
+
 fclause = [
     requirement1(quantityOfElement, numOfVars), 
     requirement2_(quantityOfElement, numOfVars), 
     requirement3_(quantityOfElement, numOfVars), 
     requirement4_(quantityOfElement, numOfVars), 
     requirement5(quantityOfElement, numOfVars), 
-    requirement6(vectorOfValue, numOfVars, quantityOfElement)
+    requirement6_(vectorOfValue, numOfVars, quantityOfElement)
     ]
 
 
-string_clause = "Λ".join(fclause)
+string_clause = "Λ".join(fclause)# + f"Λo_{numOfVars + quantityOfElement - 1}_0_"
 final = string_clause
 fclause = [ [element for element in dis.split("V")] for dis in string_clause.split("Λ")]
 # print(fclause)
