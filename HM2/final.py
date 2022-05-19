@@ -108,7 +108,7 @@ def req6(num_gates_n: int, num_gates_N: int, output_size_m: int, values, disjunc
 
 
 
-vectorOfValue = "1101110111011101"
+vectorOfValue = "0011"
 
 # print(vectorOfValue)
 # exit()
