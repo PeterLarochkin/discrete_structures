@@ -1,9 +1,9 @@
 digraph G {
 
- "x0" -> "element2";
- "element2" -> "element3";
  "element3" -> "end";
  "element2" -> "element3";
+ "element2" -> "element3";
+ "x0" -> "element2";
  "x0" -> "element2";
 
 }

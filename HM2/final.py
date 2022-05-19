@@ -1,50 +1,50 @@
 from itertools import product
-from PyMiniSolvers import minisolvers
+# from PyMiniSolvers import minisolvers
 import os
 
-def req1(num_gates_n: int, num_gates_N: int, disjunctions_list):
-    i_range = range(num_gates_n, num_gates_N + num_gates_n)
+def req1(n: int, N: int, disjunctions_list):
+    i_range = range(n, N + n)
     for i in i_range:
         clauses = [(f"t_{i}_0_0_" ), (f"t_{i}_0_1_" ),
                    (f"t_{i}_1_0_" ), (f"-t_{i}_1_1_" )]
         disjunctions_list.extend(clauses)
 
 
-def req2(num_gates_n: int, num_gates_N: int, disjunctions_list):
-    i_range = range(num_gates_n, num_gates_n + num_gates_N)
+def req2(n: int, N: int, disjunctions_list):
+    i_range = range(n, n + N)
     k_range = range(2)
-    j_range = range(num_gates_N + num_gates_n)
+    j_range = range(N + n)
     for (i, k) in product(i_range, k_range):
         existence_cond_variables = list((f"c_{i}_{k}_{j}_" for j in range(i)))  # range(i)))
         disjunctions_list.append(existence_cond_variables)
         for j_1 in j_range:
-            for j_2 in range(num_gates_n, num_gates_N + num_gates_n):
+            for j_2 in range(n, N + n):
                 if j_2 < j_1:
                     disjunction_clause = [f"-c_{i}_{k}_{j_1}_", f"-c_{i}_{k}_{j_2}_"]
                     disjunctions_list.append(disjunction_clause)
             
-def req2_(num_gates_n: int, num_gates_N: int, disjunctions_list):
-    i_range = range(num_gates_n, num_gates_n + num_gates_N)
+def req2_(n: int, N: int, disjunctions_list):
+    i_range = range(n, n + N)
     k_range = range(2)
-    j_range = range(num_gates_N + num_gates_n)
+    j_range = range(N + n)
     for (i, k) in product(i_range, k_range):
         existence_cond_variables = list((f"c_{i}_{k}_{j}_" for j in range(i)))  # range(i)))
         disjunctions_list.append(existence_cond_variables)
-        for j_1 in range(i + 1, num_gates_N + num_gates_n):
-            for j_2 in range(i + 1, num_gates_N + num_gates_n):
+        for j_1 in range(i + 1, N + n):
+            for j_2 in range(i + 1, N + n):
                 if j_2 == j_1:
                     continue
                 disjunction_clause = [f"-c_{i}_{k}_{j_1}_", f"-c_{i}_{k}_{j_2}_"]
                 disjunctions_list.append(disjunction_clause)
 
-def req3(num_gates_n: int, num_gates_N: int, output_size_m: int, disjunctions_list):
-    i_range = range(num_gates_n, num_gates_n + num_gates_N)
+def req3(n: int, N: int, output_size_m: int, disjunctions_list):
+    i_range = range(n, n + N)
     j_range = range(output_size_m)
     for j in j_range:
         existence_cond = list(f"o_{i}_{j}_" for i in i_range)
         disjunctions_list.append(existence_cond)
         for i_1 in i_range:
-            # for i_2 in range(i_1 + 1, num_gates_n + num_gates_N):
+            # for i_2 in range(i_1 + 1, n + N):
             for i_2 in i_range:
                 if i_1 == i_2:
                     continue
@@ -56,10 +56,10 @@ def req3(num_gates_n: int, num_gates_N: int, output_size_m: int, disjunctions_li
 
 
 
-def req4(num_gates_n: int, input_sets, disjunctions_list):
-    i_range = range(num_gates_n)
-    t_range = range(2 ** num_gates_n)
-    assert len(input_sets) == 2 ** num_gates_n
+def req4(n: int, input_sets, disjunctions_list):
+    i_range = range(n)
+    t_range = range(2 ** n)
+    assert len(input_sets) == 2 ** n
     for (i, t) in product(i_range, t_range):
         input_value = input_sets[t][i]
         sign = '' if input_value == 1 else '-'
@@ -67,9 +67,9 @@ def req4(num_gates_n: int, input_sets, disjunctions_list):
         disjunctions_list.append(clause)
 
 
-def req5(num_gates_n: int, num_gates_N: int, disjunctions_list):
-    i_range = range(num_gates_n, num_gates_N + num_gates_n)
-    t_range = range(2 ** num_gates_n)
+def req5(n: int, N: int, disjunctions_list):
+    i_range = range(n, N + n)
+    t_range = range(2 ** n)
     bit_range = range(2)
     for (i, r, i_0, i_1) in product(i_range, t_range, bit_range, bit_range):
         for j_0 in range(0, i):
@@ -90,9 +90,9 @@ def req5(num_gates_n: int, num_gates_N: int, disjunctions_list):
                 disjunctions_list.append(clause_2)
 
 
-def req6(num_gates_n: int, num_gates_N: int, output_size_m: int, values, disjunctions_list):
-    i_range = range(num_gates_n, num_gates_N + num_gates_n)
-    r_range = range(2 ** num_gates_n)
+def req6(n: int, N: int, output_size_m: int, values, disjunctions_list):
+    i_range = range(n, N + n)
+    r_range = range(2 ** n)
     k_range = range(output_size_m)
     for (i, r, k) in product(i_range, r_range, k_range):
         value = values[r][k]
@@ -109,9 +109,6 @@ def req6(num_gates_n: int, num_gates_N: int, output_size_m: int, values, disjunc
 
 
 vectorOfValue = "0011"
-
-# print(vectorOfValue)
-# exit()
 quantityOfElement = 2
 
 
