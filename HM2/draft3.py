@@ -48,7 +48,7 @@ def req3(num_gates_n: int, num_gates_N: int, output_size_m: int, disjunctions_li
             for i_2 in i_range:
                 if i_1 == i_2:
                     continue
-            # if i_1 < i_2:
+                # if i_1 < i_2:
                 disjunction_clause = [f"-o_{i_1}_{j}_", f"-o_{i_2}_{j}_"]
                 disjunctions_list.append(disjunction_clause)
 
@@ -107,16 +107,17 @@ def req6(num_gates_n: int, num_gates_N: int, output_size_m: int, values, disjunc
 
 
 
-# например
-# 1101
-# 11011101
-# 11011001
-# old
-vectorOfValue = "1110"
-vectorOfValue = vectorOfValue.replace("1", "a").replace("0", "1").replace("a", "0")
+
+vectorOfValue = "1101110111011101"
+
 # print(vectorOfValue)
 # exit()
 quantityOfElement = 2
+
+
+
+
+
 
 
 import math
@@ -124,12 +125,13 @@ numOfVars = int(math.log2(len(vectorOfValue)))
 if 2 ** numOfVars != len(vectorOfValue):
     raise ValueError("bad length")
 print(numOfVars)
+vectorOfValue = vectorOfValue.replace("1", "a").replace("0", "1").replace("a", "0")
 dis_list = []
 req1(quantityOfElement, numOfVars, dis_list)
 string_clause = ""
 string_clause += "Λ".join(dis_list)
 dis_list = []
-req2_(numOfVars, quantityOfElement, dis_list)
+req2(numOfVars, quantityOfElement, dis_list)
 string_clause +=  "Λ" + "Λ".join([ "V".join(dis) for dis in dis_list])
 dis_list = []
 req3(numOfVars, quantityOfElement, 1, dis_list)
@@ -147,7 +149,7 @@ req6(numOfVars, quantityOfElement, 1,values,dis_list)
 
 
 string_clause +=  "Λ" +  "Λ".join([ "V".join(dis) for dis in dis_list])  
-# string_clause += f"Λo_{numOfVars + quantityOfElement - 1}_0_"
+string_clause += f"Λo_{numOfVars + quantityOfElement - 1}_0_"
 final = string_clause
 fclause = [ [element for element in dis.split("V")] for dis in string_clause.split("Λ")]
 # print(fclause)
