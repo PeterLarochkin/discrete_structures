@@ -2,7 +2,7 @@ from itertools import product
 from PyMiniSolvers import minisolvers
 import os
 
-def create_t_ib1b2_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
+def req1(num_gates_n: int, num_gates_N: int, disjunctions_list):
     i_range = range(num_gates_n, num_gates_N + num_gates_n)
     for i in i_range:
         clauses = [(f"t_{i}_0_0_" ), (f"t_{i}_0_1_" ),
@@ -10,7 +10,7 @@ def create_t_ib1b2_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list
         disjunctions_list.extend(clauses)
 
 
-def create_c_ikj_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
+def req2(num_gates_n: int, num_gates_N: int, disjunctions_list):
     i_range = range(num_gates_n, num_gates_n + num_gates_N)
     k_range = range(2)
     j_range = range(num_gates_N + num_gates_n)
@@ -18,42 +18,45 @@ def create_c_ikj_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
         existence_cond_variables = list((f"c_{i}_{k}_{j}_" for j in range(i)))  # range(i)))
         disjunctions_list.append(existence_cond_variables)
         for j_1 in j_range:
-            for j_2 in range(j_1 + 1, num_gates_N + num_gates_n):
-                if j_1 < j_2:
+            for j_2 in range(num_gates_n, num_gates_N + num_gates_n):
+                if j_2 < j_1:
                     disjunction_clause = [f"-c_{i}_{k}_{j_1}_", f"-c_{i}_{k}_{j_2}_"]
                     disjunctions_list.append(disjunction_clause)
             
-def requirement2_(N, n, finalClause):
-    # finalClause = []
-    for i in range(n, n + N):
-        for k in range(0, 2):
-            for num in range(2**(n+N)):
-                binNum =  "{}".format(bin(num))[2:]
-                binNum = (("0"*((n+N) - len(binNum)))+binNum)
-                if binNum.count("1") != 1:
-                    localClause = []
-                    for j, jtem in enumerate(binNum):
-                        # if i != j:
-                            sign = "" if jtem == "0" else "-"
-                            localClause.append(f"{sign}c_{i}_{k}_{j}_")
-                            finalClause.append((localClause))
-    # return (finalClause)
+def req2_(num_gates_n: int, num_gates_N: int, disjunctions_list):
+    i_range = range(num_gates_n, num_gates_n + num_gates_N)
+    k_range = range(2)
+    j_range = range(num_gates_N + num_gates_n)
+    for (i, k) in product(i_range, k_range):
+        existence_cond_variables = list((f"c_{i}_{k}_{j}_" for j in range(i)))  # range(i)))
+        disjunctions_list.append(existence_cond_variables)
+        for j_1 in range(i + 1, num_gates_N + num_gates_n):
+            for j_2 in range(i + 1, num_gates_N + num_gates_n):
+                if j_2 == j_1:
+                    continue
+                disjunction_clause = [f"-c_{i}_{k}_{j_1}_", f"-c_{i}_{k}_{j_2}_"]
+                disjunctions_list.append(disjunction_clause)
 
-
-def create_o_ij_clauses(num_gates_n: int, num_gates_N: int, output_size_m: int, disjunctions_list):
+def req3(num_gates_n: int, num_gates_N: int, output_size_m: int, disjunctions_list):
     i_range = range(num_gates_n, num_gates_n + num_gates_N)
     j_range = range(output_size_m)
     for j in j_range:
         existence_cond = list(f"o_{i}_{j}_" for i in i_range)
         disjunctions_list.append(existence_cond)
         for i_1 in i_range:
-            for i_2 in range(i_1 + 1, num_gates_n + num_gates_N):
-                if i_1 < i_2:
-                    disjunction_clause = [f"-o_{i_1}_{j}_", f"-o_{i_2}_{j}_"]
-                    disjunctions_list.append(disjunction_clause)
+            # for i_2 in range(i_1 + 1, num_gates_n + num_gates_N):
+            for i_2 in i_range:
+                if i_1 == i_2:
+                    continue
+            # if i_1 < i_2:
+                disjunction_clause = [f"-o_{i_1}_{j}_", f"-o_{i_2}_{j}_"]
+                disjunctions_list.append(disjunction_clause)
 
 
-def create_v_it_input_clauses(num_gates_n: int, input_sets, disjunctions_list):
+
+
+
+def req4(num_gates_n: int, input_sets, disjunctions_list):
     i_range = range(num_gates_n)
     t_range = range(2 ** num_gates_n)
     assert len(input_sets) == 2 ** num_gates_n
@@ -64,25 +67,30 @@ def create_v_it_input_clauses(num_gates_n: int, input_sets, disjunctions_list):
         disjunctions_list.append(clause)
 
 
-def create_six_clauses(num_gates_n: int, num_gates_N: int, disjunctions_list):
+def req5(num_gates_n: int, num_gates_N: int, disjunctions_list):
     i_range = range(num_gates_n, num_gates_N + num_gates_n)
     t_range = range(2 ** num_gates_n)
     bit_range = range(2)
     for (i, r, i_0, i_1) in product(i_range, t_range, bit_range, bit_range):
         for j_0 in range(0, i):
-            for j_1 in range(j_0, i):
+        # for j_0 in i_range:    
+            for j_1 in range(0, i):
                 i_0_sign = '-' if i_0 == 1 else ''
                 i_1_sign = '-' if i_1 == 1 else ''
 
                 clause_1 = [f"-c_{i}_{0}_{j_0}_", f"-c_{i}_{1}_{j_1}_", f"{i_0_sign}v_{j_0}_{r}_",
                             f"{i_1_sign}v_{j_1}_{r}_", f"v_{i}_{r}_", f"-t_{i}_{i_0}_{i_1}_"]
-                clause_2 = [f"-c_{i}_{0}_{j_0}_", f"-c_{i}_{1}_{j_1}_", f"{i_0_sign}v_{j_0}_{r}_",
-                            f"{i_1_sign}v_{j_1}_{r}_", f"-v_{i}_{r}_", f"t_{i}_{i_0}_{i_1}_"]
+                clause_2 = [f"-c_{i}_{0}_{j_0}_", 
+                            f"-c_{i}_{1}_{j_1}_", 
+                            f"{i_0_sign}v_{j_0}_{r}_",
+                            f"{i_1_sign}v_{j_1}_{r}_", 
+                            f"-v_{i}_{r}_", 
+                            f"t_{i}_{i_0}_{i_1}_"]
                 disjunctions_list.append(clause_1)
                 disjunctions_list.append(clause_2)
 
 
-def create_output_check_clauses(num_gates_n: int, num_gates_N: int, output_size_m: int, values, disjunctions_list):
+def req6(num_gates_n: int, num_gates_N: int, output_size_m: int, values, disjunctions_list):
     i_range = range(num_gates_n, num_gates_N + num_gates_n)
     r_range = range(2 ** num_gates_n)
     k_range = range(output_size_m)
@@ -93,39 +101,53 @@ def create_output_check_clauses(num_gates_n: int, num_gates_N: int, output_size_
         disjunctions_list.append(clause)
 
 
-vectorOfValue = "0101"
+
+
+
+
+
+
+# например
+# 1101
+# 11011101
+# 11011001
+# old
+vectorOfValue = "1110"
+vectorOfValue = vectorOfValue.replace("1", "a").replace("0", "1").replace("a", "0")
+# print(vectorOfValue)
+# exit()
 quantityOfElement = 2
 
 
 import math
 numOfVars = int(math.log2(len(vectorOfValue)))
-
+if 2 ** numOfVars != len(vectorOfValue):
+    raise ValueError("bad length")
 print(numOfVars)
 dis_list = []
-create_t_ib1b2_clauses(quantityOfElement, numOfVars, dis_list)
+req1(quantityOfElement, numOfVars, dis_list)
 string_clause = ""
 string_clause += "Λ".join(dis_list)
 dis_list = []
-# requirement2_(numOfVars, quantityOfElement, dis_list)
-create_c_ikj_clauses(numOfVars, quantityOfElement, dis_list)
+req2_(numOfVars, quantityOfElement, dis_list)
 string_clause +=  "Λ" + "Λ".join([ "V".join(dis) for dis in dis_list])
 dis_list = []
-create_o_ij_clauses(numOfVars, quantityOfElement, 1, dis_list)
+req3(numOfVars, quantityOfElement, 1, dis_list)
 string_clause +=  "Λ" +  "Λ".join([ "V".join(dis) for dis in dis_list])
 dis_list = []
 input_sets = list(product((0, 1), repeat=numOfVars))
-create_v_it_input_clauses(numOfVars, input_sets, dis_list)
+req4(numOfVars, input_sets, dis_list)
 string_clause +=  "Λ" + "Λ".join(dis_list)
 dis_list = []
-create_six_clauses(numOfVars, quantityOfElement, dis_list)
+req5(numOfVars, quantityOfElement, dis_list)
 string_clause +=  "Λ" +  "Λ".join([ "V".join(dis) for dis in dis_list])
 dis_list = []
 values = [(int(value),) for value in vectorOfValue]
-create_output_check_clauses(numOfVars, quantityOfElement, 1,values,dis_list)
+req6(numOfVars, quantityOfElement, 1,values,dis_list)
 
 
 string_clause +=  "Λ" +  "Λ".join([ "V".join(dis) for dis in dis_list])  
-string_clause += f"Λo_{numOfVars + quantityOfElement - 1}_0_"
+# string_clause += f"Λo_{numOfVars + quantityOfElement - 1}_0_"
 final = string_clause
 fclause = [ [element for element in dis.split("V")] for dis in string_clause.split("Λ")]
 # print(fclause)
