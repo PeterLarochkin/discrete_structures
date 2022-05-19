@@ -108,7 +108,7 @@ def req6(n: int, N: int, output_size_m: int, values, disjunctions_list):
 
 
 
-vectorOfValue = "0011"
+vectorOfValue = "0111"
 quantityOfElement = 2
 
 
